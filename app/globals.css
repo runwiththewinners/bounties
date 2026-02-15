@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gold: #d4a843;
+  --gold-hi: #f0c95c;
+  --gold-lo: #a07c2e;
+  --fire: #e8522a;
+  --blue: #4ea8f6;
+  --green: #4ade80;
+  --red: #ef4444;
+  --purple: #a855f7;
+  --txt: #f5f1eb;
+  --txt2: rgba(245, 241, 235, 0.55);
+  --txt3: rgba(245, 241, 235, 0.3);
+  --border: rgba(255, 255, 255, 0.08);
+  --glass: rgba(255, 255, 255, 0.03);
+  --card-bg: rgba(255, 255, 255, 0.04);
+  --page-bg: #111113;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body { background: var(--page-bg); }
+
+/* ─── Gold gradient text ─── */
+.gold-text {
+  background: linear-gradient(135deg, var(--gold-hi), var(--gold), var(--gold-lo));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Card base ─── */
+.card {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  overflow: hidden;
+}
+
+/* ─── Difficulty badges ─── */
+.diff-easy { background: rgba(74,222,128,.08); border: 1px solid rgba(74,222,128,.15); color: var(--green); }
+.diff-medium { background: rgba(212,168,67,.08); border: 1px solid rgba(212,168,67,.15); color: var(--gold); }
+.diff-hard { background: rgba(232,82,42,.08); border: 1px solid rgba(232,82,42,.15); color: var(--fire); }
+
+/* ─── Status badges ─── */
+.badge { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; }
+.badge-pending { background: rgba(212,168,67,.08); border: 1px solid rgba(212,168,67,.15); color: var(--gold); }
+.badge-approved { background: rgba(74,222,128,.08); border: 1px solid rgba(74,222,128,.15); color: var(--green); }
+.badge-declined { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.15); color: var(--red); }
+.badge-expired { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.15); color: var(--red); }
+
+/* ─── Tier badges ─── */
+.tier-hr { background: rgba(212,168,67,.12); border: 1px solid rgba(212,168,67,.2); color: var(--gold); }
+.tier-prem { background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.2); color: var(--green); }
+
+/* ─── Green CTA button ─── */
+.btn-cta {
+  width: 100%; padding: 12px; border-radius: 10px; border: none;
+  background: linear-gradient(135deg, var(--green), #22c55e); color: #0a0a0a;
+  font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 13px;
+  letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+  transition: transform 0.2s;
+}
+.btn-cta:hover { transform: scale(1.02); }
+.btn-cta:disabled { background: #333; color: var(--txt3); cursor: not-allowed; transform: none; }
+
+/* ─── Gold CTA button ─── */
+.btn-gold {
+  width: 100%; padding: 14px; border-radius: 10px; border: none;
+  background: linear-gradient(135deg, var(--gold), var(--gold-lo)); color: #0a0a0a;
+  font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 14px;
+  letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+  transition: transform 0.2s;
+}
+.btn-gold:hover { transform: scale(1.02); }
+
+/* ─── Approve / Decline buttons ─── */
+.btn-approve {
+  flex: 1; padding: 12px; border-radius: 10px; border: none;
+  background: linear-gradient(135deg, var(--green), #22c55e); color: #0a0a0a;
+  font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 13px;
+  letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer;
+  transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-decline {
+  flex: 1; padding: 12px; border-radius: 10px; border: none;
+  background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.2); color: var(--red);
+  font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 13px;
+  letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer;
+  transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+
+/* ─── Form inputs ─── */
+.form-input {
+  width: 100%; padding: 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--glass);
+  color: var(--txt); font-family: inherit; font-size: 13px;
+}
+.form-input:focus { outline: none; border-color: var(--gold); }
+
+/* ─── Section label ─── */
+.section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--txt3);
+  margin: 20px 0 12px; padding-left: 4px;
+}
+
+/* ─── Animations ─── */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.75); } }
+.animate-fadeUp { animation: fadeUp 0.5s ease both; }
+
+/* ─── Progress bar ─── */
+.progress-bar { height: 4px; border-radius: 2px; background: var(--glass); overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width 0.3s; }
+
+/* ─── Avatar gradients ─── */
+.av-gold { background: linear-gradient(135deg, var(--gold), var(--gold-lo)); }
+.av-green { background: linear-gradient(135deg, var(--green), #22c55e); }
+.av-blue { background: linear-gradient(135deg, var(--blue), #2b7de9); }
