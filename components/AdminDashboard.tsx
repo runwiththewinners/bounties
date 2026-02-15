@@ -20,6 +20,9 @@ export default function AdminDashboard({
   const [totalPaid, setTotalPaid] = useState(0);
   const [completedCount, setCompletedCount] = useState(0);
   const [editingStats, setEditingStats] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [editingLeaderboard, setEditingLeaderboard] = useState(false);
+  const [newLbEntry, setNewLbEntry] = useState({ name: "", initials: "", earned: "" });
 
   // Create bounty form
   const [form, setForm] = useState({
@@ -30,16 +33,18 @@ export default function AdminDashboard({
   useEffect(() => {
     async function load() {
       try {
-        const [bRes, sRes, stRes] = await Promise.all([
+        const [bRes, sRes, stRes, lbRes] = await Promise.all([
           fetch("/api/bounties"),
           fetch("/api/submissions"),
           fetch("/api/stats"),
+          fetch("/api/leaderboard"),
         ]);
         setBounties(await bRes.json());
         setSubmissions(await sRes.json());
         const statsData = await stRes.json();
         setTotalPaid(statsData.totalPaid || 0);
         setCompletedCount(statsData.completedCount || 0);
+        setLeaderboard(await lbRes.json());
       } catch (e) {
         console.error("Load error:", e);
       }
@@ -279,42 +284,114 @@ export default function AdminDashboard({
       {/* Quick Stats */}
       <div className="grid grid-cols-4 gap-2 mb-5 animate-fadeUp" style={{ animationDelay: "0.1s" }}>
         {[
-          { val: stats.pending, label: "Pending", color: "text-[var(--fire)]", editable: false },
-          { val: `$${stats.totalPaid}`, label: "Paid Out", color: "text-green-400", editable: true },
-          { val: stats.active, label: "Active", color: "gold-text", editable: false },
-          { val: stats.completed, label: "Completed", color: "text-[var(--blue)]", editable: false },
+          { val: stats.pending, label: "Pending", color: "text-[var(--fire)]" },
+          { val: `$${stats.totalPaid}`, label: "Paid Out", color: "text-green-400" },
+          { val: stats.active, label: "Active", color: "gold-text" },
+          { val: stats.completed, label: "Completed", color: "text-[var(--blue)]" },
         ].map((s, i) => (
-          <div key={i} className={`card p-3 text-center ${s.editable ? "cursor-pointer hover:border-[var(--gold)]/30 transition-all" : ""}`} onClick={() => s.editable && setEditingStats(true)}>
+          <div key={i} className="card p-3 text-center cursor-pointer hover:border-[var(--gold)]/30 transition-all" onClick={() => setEditingStats(true)}>
             <div className={`font-heading text-xl font-bold leading-none ${s.color}`}>{s.val}</div>
-            <div className="text-[8px] font-semibold tracking-[1px] uppercase text-txt-dim mt-1">{s.label}{s.editable && " ✏️"}</div>
+            <div className="text-[8px] font-semibold tracking-[1px] uppercase text-txt-dim mt-1">{s.label}</div>
           </div>
         ))}
       </div>
 
-      {/* Edit Total Paid Modal */}
+      {/* Edit Stats & Leaderboard Modal */}
       {editingStats && (
         <div className="fixed inset-0 bg-black/70 z-[200] flex items-center justify-center p-5" onClick={(e) => e.target === e.currentTarget && setEditingStats(false)}>
-          <div className="w-full max-w-[360px] rounded-2xl border border-white/[0.08] bg-[#1a1a1d] p-5">
-            <div className="font-heading text-sm tracking-[1.5px] uppercase text-[var(--gold)] mb-4">Edit Total Paid Out</div>
-            <div className="mb-4">
-              <label className="block text-[11px] font-semibold tracking-[1px] uppercase text-txt-muted mb-1.5">Amount ($)</label>
-              <input className="form-input text-lg font-heading font-bold" type="number" value={totalPaid} onChange={(e) => setTotalPaid(parseInt(e.target.value) || 0)} />
+          <div className="w-full max-w-[460px] rounded-2xl border border-white/[0.08] bg-[#1a1a1d] overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.08]">
+              <span className="font-heading text-sm tracking-[1.5px] uppercase text-[var(--gold)]">Edit Stats & Leaderboard</span>
+              <button onClick={() => setEditingStats(false)} className="w-8 h-8 rounded-lg border border-white/[0.08] bg-white/[0.03] text-txt-muted text-base flex items-center justify-center hover:border-red-500 hover:text-red-500 transition-colors">✕</button>
             </div>
-            <button className="btn-approve w-full" onClick={async () => {
-              try {
-                await fetch("/api/stats", {
-                  method: "PATCH",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ totalPaid }),
-                });
-                setEditingStats(false);
-                showToast("Total paid updated! 💰");
-              } catch (e) {
-                showToast("Failed to save");
-              }
-            }}>
-              ✅ Save
-            </button>
+            <div className="p-5">
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-2.5 mb-5">
+                <div>
+                  <label className="block text-[11px] font-semibold tracking-[1px] uppercase text-txt-muted mb-1.5">Total Paid Out ($)</label>
+                  <input className="form-input text-lg font-heading font-bold" type="number" value={totalPaid} onChange={(e) => setTotalPaid(parseInt(e.target.value) || 0)} />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold tracking-[1px] uppercase text-txt-muted mb-1.5">Completed Bounties</label>
+                  <input className="form-input text-lg font-heading font-bold" type="number" value={completedCount} onChange={(e) => setCompletedCount(parseInt(e.target.value) || 0)} />
+                </div>
+              </div>
+              <button className="btn-approve w-full mb-5" onClick={async () => {
+                try {
+                  await fetch("/api/stats", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ totalPaid, completedCount }),
+                  });
+                  showToast("Stats updated! 💰");
+                } catch (e) {
+                  showToast("Failed to save stats");
+                }
+              }}>
+                ✅ Save Stats
+              </button>
+
+              {/* Leaderboard */}
+              <div className="border-t border-white/[0.08] pt-4">
+                <div className="text-[11px] font-bold tracking-[1.5px] uppercase text-[var(--gold)] mb-3">🏆 Top Earners</div>
+                {leaderboard.map((entry, i) => (
+                  <div key={entry.id} className="flex items-center gap-2 mb-2.5">
+                    <span className="w-5 font-heading text-sm font-bold text-center" style={{ color: i === 0 ? "var(--gold)" : i === 1 ? "#c0c0c0" : "#cd7f32" }}>{i + 1}</span>
+                    <input className="form-input flex-1 text-[13px]" value={entry.name} onChange={(e) => setLeaderboard((prev) => prev.map((x) => x.id === entry.id ? { ...x, name: e.target.value } : x))} placeholder="Name" />
+                    <input className="form-input w-14 text-[13px] text-center" value={entry.initials} onChange={(e) => setLeaderboard((prev) => prev.map((x) => x.id === entry.id ? { ...x, initials: e.target.value } : x))} placeholder="AB" maxLength={3} />
+                    <div className="relative">
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-green-400 text-[13px] font-bold">$</span>
+                      <input className="form-input w-20 text-[13px] pl-5 font-bold text-green-400" type="number" value={entry.earned} onChange={(e) => setLeaderboard((prev) => prev.map((x) => x.id === entry.id ? { ...x, earned: parseInt(e.target.value) || 0 } : x))} />
+                    </div>
+                    <button onClick={async () => {
+                      await fetch(`/api/leaderboard?id=${entry.id}`, { method: "DELETE" });
+                      setLeaderboard((prev) => prev.filter((x) => x.id !== entry.id));
+                    }} className="w-8 h-8 rounded-md border border-red-400/20 text-red-400 text-xs flex items-center justify-center hover:bg-red-400/[0.08] shrink-0">✕</button>
+                  </div>
+                ))}
+
+                {/* Add new entry */}
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.08]">
+                  <input className="form-input flex-1 text-[13px]" value={newLbEntry.name} onChange={(e) => setNewLbEntry({ ...newLbEntry, name: e.target.value })} placeholder="New name" />
+                  <input className="form-input w-14 text-[13px] text-center" value={newLbEntry.initials} onChange={(e) => setNewLbEntry({ ...newLbEntry, initials: e.target.value })} placeholder="AB" maxLength={3} />
+                  <input className="form-input w-20 text-[13px]" type="number" value={newLbEntry.earned} onChange={(e) => setNewLbEntry({ ...newLbEntry, earned: e.target.value })} placeholder="$0" />
+                  <button onClick={async () => {
+                    if (!newLbEntry.name || !newLbEntry.initials) return;
+                    try {
+                      const res = await fetch("/api/leaderboard", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name: newLbEntry.name, initials: newLbEntry.initials, earned: parseInt(newLbEntry.earned) || 0 }),
+                      });
+                      if (res.ok) {
+                        const entry = await res.json();
+                        setLeaderboard((prev) => [...prev, entry].sort((a, b) => b.earned - a.earned));
+                        setNewLbEntry({ name: "", initials: "", earned: "" });
+                      }
+                    } catch (e) { console.error(e); }
+                  }} className="w-8 h-8 rounded-md border border-green-400/30 text-green-400 text-lg flex items-center justify-center hover:bg-green-400/[0.08] shrink-0">+</button>
+                </div>
+
+                <button className="btn-gold w-full mt-4" onClick={async () => {
+                  try {
+                    await Promise.all(leaderboard.map((entry) =>
+                      fetch("/api/leaderboard", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: entry.id, name: entry.name, initials: entry.initials, earned: entry.earned }),
+                      })
+                    ));
+                    setLeaderboard((prev) => [...prev].sort((a, b) => b.earned - a.earned));
+                    setEditingStats(false);
+                    showToast("Leaderboard updated! 🏆");
+                  } catch (e) {
+                    showToast("Failed to save leaderboard");
+                  }
+                }}>
+                  Save Leaderboard
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

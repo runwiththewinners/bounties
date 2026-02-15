@@ -42,26 +42,24 @@ export default function MemberBounties({
   const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Seed leaderboard (in production, fetch from API)
-  const leaderboard = [
-    { name: "Marcus R.", initials: "MR", earned: 87, grad: "av-gold" },
-    { name: "Jake T.", initials: "JT", earned: 62, grad: "av-green" },
-    { name: "Austin S.", initials: "AS", earned: 54, grad: "av-blue" },
-  ];
+  // Leaderboard from database
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalPaid: 0, completed: 0 });
 
   useEffect(() => {
     async function load() {
       try {
-        const [bRes, sRes, stRes] = await Promise.all([
+        const [bRes, sRes, stRes, lbRes] = await Promise.all([
           fetch("/api/bounties"),
           fetch(`/api/submissions?userId=${userId}`),
           fetch("/api/stats"),
+          fetch("/api/leaderboard"),
         ]);
         setBounties(await bRes.json());
         setMySubmissions(await sRes.json());
         const statsData = await stRes.json();
         setStats({ totalPaid: statsData.totalPaid || 0, completed: statsData.completedCount || 0 });
+        setLeaderboard(await lbRes.json());
       } catch (e) {
         console.error("Load error:", e);
       }
@@ -163,7 +161,7 @@ export default function MemberBounties({
             <span className="w-6 font-heading text-sm font-bold text-center" style={{ color: i === 0 ? "var(--gold)" : i === 1 ? "#c0c0c0" : "#cd7f32" }}>
               {i + 1}
             </span>
-            <div className={`w-[30px] h-[30px] rounded-full flex items-center justify-center font-heading text-[11px] font-bold text-[#0a0a0a] ${p.grad}`}>
+            <div className={`w-[30px] h-[30px] rounded-full flex items-center justify-center font-heading text-[11px] font-bold text-[#0a0a0a] ${i === 0 ? "av-gold" : i === 1 ? "av-green" : "av-blue"}`}>
               {p.initials}
             </div>
             <span className="flex-1 text-[13px] font-semibold">{p.name}</span>
